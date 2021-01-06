@@ -8,8 +8,8 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/aws/aws-sdk-go/events"
-	"github.com/aws/aws-sdk-go/lambda"
+	"github.com/aws/aws-lambda-go/events"
+	"github.com/aws/aws-lambda-go/lambda"
 )
 
 func main() {
@@ -20,7 +20,7 @@ func kinesisHandler(ctx context.Context, kinesisEvent events.KinesisEvent) error
 
 	Record := kinesisEvent.Records[0]
 	fmt.Println("Region: " + Record.AwsRegion)
-	fmt.Println("Records:" + Record)
+	fmt.Println("Event ID: " + Record.EventID)
 
 	return nil
 }
