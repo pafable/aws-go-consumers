@@ -14,6 +14,7 @@ import (
 	"strconv"
 	"strings"
 	"time"
+
 	"github.com/aws/aws-lambda-go/events"
 	"github.com/aws/aws-lambda-go/lambda"
 	"github.com/aws/aws-sdk-go/aws"
@@ -26,19 +27,19 @@ func main() {
 	lambda.Start(kinesisHandler)
 }
 
-func kinesisHandler(ctx context.Context, kinesisEvent events.kinesisEvent) error {
+func kinesisHandler(ctx context.Context, kinesisEvent events.KinesisEvent) error {
 	data := kinesisEvent.Records[0]
 	fmt.Println(data.EventID)
 
 	c1 := make(chan *s3.PutObjectOutput)
-	go uploadS3Bucket(data.Kinesis.Data, c1)
+	go uploadS3Bucket(string(data.Kinesis.Data), c1)
 
 	for c1Msg := range c1 {
 		fmt.Println(c1Msg)
 	}
 
 	c2 := make(chan *dynamodb.PutItemOutput)
-	go sendToDynamo(data.EventID, data.Kinesis.Data, c2)
+	go sendToDynamo(data.EventID, string(data.Kinesis.Data), c2)
 
 	for c2Msg := range c2 {
 		fmt.Println(c2Msg)
