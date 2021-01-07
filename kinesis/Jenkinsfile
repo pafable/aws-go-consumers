@@ -1,0 +1,77 @@
+pipeline {
+   agent any   
+   
+   environment {
+       AWS_ACCESS_KEY_ID = credentials('aws-secret-key-id')
+       AWS_SECRET_KEY = credentials('aws-secret-access-key')
+       PATH = $PATH:/usr/local/bin
+   }   
+   
+   stages {
+      stage('Static Analysis') {
+          environment {
+              def scannerHome = tool 'SonarScanTest';
+          }
+          steps{
+            withSonarQubeEnv('sonar-01') {
+                sh("${scannerHome}/bin/sonar-scanner")
+            }
+          }
+      }      
+
+      stage('Terraform Check') {
+          steps {
+              dir('terraform') {
+                  sh("/usr/local/bin/terraform init -no-color")
+                  sh("/usr/local/bin/terraform validate -no-color")
+                  sh("/usr/local/bin/terraform plan -no-color")
+              }
+          }
+      }      
+
+      stage('Check Files') {
+          steps {
+              echo "This build will APPLY"
+            //   echo "This build will DESTROY"
+              sh("ls -ahl")
+          }
+      }      
+
+      stage('Proceed?') {
+          options {
+              timeout(time: 8, unit: 'HOURS')
+          }
+          steps {
+              echo "go go go go go!"
+          }
+          input {
+              message "Should we continue?"
+              ok "Proceed"
+          }
+      }      
+
+      stage('Terraform Deploy') {
+          steps {
+              dir('terraform') {
+                // sh("/usr/local/bin/terraform apply -auto-approve -no-color")
+                // sh("/usr/local/bin/terraform destroy -auto-approve -no-color")                
+                sh("/usr/local/bin/terraform plan -out=APPLY.tfplan -no-color")
+                sh("/usr/local/bin/terraform apply APPLY.tfplan -no-color")                
+                // sh("/usr/local/bin/terraform plan -destroy -out=DESTROY.tfplan -no-color")
+                // sh("/usr/local/bin/terraform apply DESTROY.tfplan -no-color")
+              }
+          }
+      }
+   }   
+
+   post {
+       success {
+           sh('cat success.txt')
+           chuckNorris()
+       }
+       failure {
+           echo "yo this chit failed!"
+           chuckNorris()
+       }
+   }
+}
