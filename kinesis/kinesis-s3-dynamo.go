@@ -1,10 +1,10 @@
 package main
 
 /*
-This lambda function will take a message from SQS, extract the body and upload it to s3.
-It will also send the message body and ID to DynamoDB.
+This lambda function will consume data from kinesis steam, extract the data and upload it to s3.
+It will also send the data and event ID to DynamoDB.
 The message attribute corresponding to "env" will be displayed in stdout.
-The dynamodb table name and SQS queue names are configured as environment variables in Lambda.
+The dynamodb table name and s3 bucket names are configured as environment variables in Lambda.
 */
 
 import (
